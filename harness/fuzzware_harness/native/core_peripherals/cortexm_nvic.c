@@ -1,5 +1,6 @@
 #include "cortexm_nvic.h"
 
+unsigned long excp_prev_loc = 0;
 // We implement recalculating states lazily, but can disable that behavior
 // #define DISABLE_LAZY_RECALCS
 
@@ -957,6 +958,11 @@ static void nvic_exception_return_hook(uc_engine *uc, uint64_t address, uint32_t
 
     ExceptionReturn(uc, address);
 
+    if(excp_prev_loc){
+        uc_set_prev_loc(uc, excp_prev_loc);
+        excp_prev_loc = 0;
+    }
+
     #ifdef DEBUG_NVIC
     uint32_t pc;
     uc_reg_read(uc, UC_ARM_REG_PC, &pc);
@@ -1068,6 +1074,9 @@ static void ExceptionEntry(uc_engine *uc, bool is_tail_chained, bool skip_instru
     uc_reg_write(uc, UC_ARM_REG_LR, &new_lr);
 
     // We inline ExceptionTaken here
+
+    excp_prev_loc = uc_get_prev_loc(uc);
+    uc_set_prev_loc(uc, 0);
 
     // Find the ISR entry point and set it
     uint32_t ExceptionNumber = nvic.pending_irq;
