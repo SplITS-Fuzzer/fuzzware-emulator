@@ -1123,6 +1123,7 @@ uc_err emulate(uc_engine *uc, char *p_input_path, char *prefix_input_path) {
     if(do_fuzz) {
         uc_fuzzer_reset_cov(uc, 1);
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
+        uc_fuzzer_cursor(uc, &fuzz_cursor);
         trigger_snapshotting(uc);
 
         // AFL-compatible Forkserver loop
